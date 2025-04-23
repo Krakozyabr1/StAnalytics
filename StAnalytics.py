@@ -146,7 +146,7 @@ if file_path != "" and file_path is not None:
                 prepare_data_button = st.button('Prepare data', type="primary")
 
             if 'df_prepared' not in st.session_state:
-                st.session_state['df_prepared'] = None
+                st.session_state['df_prepared'] = df
 
             if prepare_data_button:
                 df_prepared = handle_duplicates(df, duplicate_handling)
