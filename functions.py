@@ -256,29 +256,29 @@ def make_num_plot(df, plot_type, x, y, target, to_plot_z_scores, z_scores_to_plo
     fig, ax = plt.subplots()
 
     if plot_type == 'histogram':
-        plot = sns.histplot(df, x=x, hue=target, hue_order=colors, ax=ax)
+        plot = sns.histplot(df, x=x, hue=target, palette=colormap, ax=ax)
     elif plot_type == 'kde':
-        plot = sns.kdeplot(df, x=x, y=y, hue=target, hue_order=colors, ax=ax)
+        plot = sns.kdeplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
     elif plot_type == 'histogram+kde':
-        plot = sns.histplot(df, x=x, hue=target, hue_order=colors, kde=True, ax=ax)
+        plot = sns.histplot(df, x=x, hue=target, palette=colormap, kde=True, ax=ax)
     elif plot_type == 'histogram (cumulative)':
-        plot = sns.histplot(df, x=x, hue=target, hue_order=colors, cumulative=True, ax=ax)
+        plot = sns.histplot(df, x=x, hue=target, palette=colormap, cumulative=True, ax=ax)
     elif plot_type == 'kde (cumulative)':
-        plot = sns.kdeplot(df, x=x, hue=target, hue_order=colors, cumulative=True, ax=ax)
+        plot = sns.kdeplot(df, x=x, hue=target, palette=colormap, cumulative=True, ax=ax)
     elif plot_type == 'histogram+kde (cumulative)':
-        plot = sns.histplot(df, x=x, hue=target, hue_order=colors, kde=True, cumulative=True, ax=ax)
+        plot = sns.histplot(df, x=x, hue=target, palette=colormap, kde=True, cumulative=True, ax=ax)
     elif plot_type == 'scatterplot':
         if to_plot_regression:
-            plot = sns.lmplot(df, x=x, y=y, hue=target, hue_order=colors, order=regression_order)
+            plot = sns.lmplot(df, x=x, y=y, hue=target, palette=colormap, order=regression_order)
             fig, ax = plot.figure, plot.ax
         else:
-            plot = sns.scatterplot(df, x=x, y=y, hue=target, hue_order=colors, ax=ax)
+            plot = sns.scatterplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
     elif plot_type == 'box plot':
-        plot = sns.boxplot(df, x=x, hue=target, hue_order=colors, ax=ax)
+        plot = sns.boxplot(df, x=x, hue=target, palette=colormap, ax=ax)
     elif plot_type == 'violin plot':
-        plot = sns.violinplot(df, x=x, hue=target, hue_order=colors, ax=ax)
+        plot = sns.violinplot(df, x=x, hue=target, palette=colormap, ax=ax)
     elif plot_type == 'jitter plot':
-        plot = sns.stripplot(df, x=x, y=y, hue=target, hue_order=colors, ax=ax)
+        plot = sns.stripplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
     
     
     
