@@ -1,15 +1,14 @@
-import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
-from itertools import cycle
+# from itertools import cycle
 import streamlit as st
 import functions as fn
 import seaborn as sns
-import pandas as pd
-import numpy as np
-import matplotlib
-import wx
-import os
-import io
+# import pandas as pd
+# import numpy as np
+# import matplotlib
+# import wx
+# import os
+# import io
 
 def make_cat_plot(df, plot_type, x, y, aggregation, target, x_label, y_label, title, colormap='tab10'):
 
