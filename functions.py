@@ -334,10 +334,10 @@ def make_cat_plot(df, plot_type, x, y, aggregation, target, x_label, y_label, ti
         if target is None:
             if y is None:
                 df[x].value_counts().plot.pie(autopct='%1.1f%%')
-                ax.set_ylabel(f'Number of {x}')
+                ax.set_title(f'Number of {x}')
             else:
                 getattr(df.groupby([x]), aggregation)().plot(kind='pie', y=y, autopct='%1.1f%%', ax=ax)
-                ax.set_ylabel(f'{aggregation.capitalize()} of {y}')
+                ax.set_title(f'{aggregation.capitalize()} of {y} by {x}')
         else:
             target_values = df[target].unique()
             num_targets = len(target_values)
