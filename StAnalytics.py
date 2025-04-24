@@ -1,40 +1,10 @@
-import matplotlib.pyplot as plt
-# from itertools import cycle
 import streamlit as st
 import functions as fn
-import seaborn as sns
-# import pandas as pd
-# import numpy as np
-# import matplotlib
-# import wx
-# import os
-# import io
 
-def make_cat_plot(df, plot_type, x, y, aggregation, target, x_label, y_label, title, colormap='tab10'):
-
-    fig, ax = plt.subplots()
-
-    if plot_type == 'bar plot':
-        if y is None:
-            sns.countplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
-        else:
-            sns.barplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
-    elif plot_type == 'pie plot':
-        if y is None:
-            df[x].value_counts().plot.pie(autopct='%1.1f%%')
-            ax.set_ylabel(f'Number of {x}')
-        else:
-            getattr(df.groupby([x]), aggregation)().plot(kind='pie', y=y, autopct='%1.1f%%', ax=ax)
-            ax.set_ylabel(f'{aggregation.capitalize()} of {y}')
-
-    if x_label != '':
-        ax.set_xlabel(x_label)
-    if y_label != '':
-        ax.set_ylabel(y_label)
-    if title != '':
-        ax.set_title(title)
-
-    return fig
+@st.cache_resource
+def save_data_function(df, df_info_num, df_info_cat, data_to_save, num_cols, cat_cols, save_format='xlsx'):        
+    return fn.save_data_function(df, df_info_num, df_info_cat, data_to_save, num_cols, cat_cols, save_format)
+    
 
 @st.cache_resource
 def read_table(path):
@@ -278,6 +248,17 @@ if file_path != "" and file_path is not None:
                     plot_cat_button = st.button('Plot', type='primary', key='plot_cat')
         
         with plot_right:
+            if st.session_state['df_prepared'] is not None:
+                with st.container(border=True):
+                    data_to_save = st.selectbox('Save', options=['Processed table', 'Columns info'])
+                    excel_buffer, file_name = save_data_function(st.session_state['df_prepared'], df_info_num, df_info_cat, data_to_save, num_cols, cat_cols)
+                    st.download_button(
+                        label="Download Excel File",
+                        data=excel_buffer,
+                        file_name=file_name,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        type='primary',
+                    )
 
             if len(num_cols) > 0:
                 st.subheader("Numerical Plot")
@@ -310,7 +291,7 @@ if file_path != "" and file_path is not None:
                 st.subheader("Categorical Plot")
                 if plot_cat_button:
                     if st.session_state['df_prepared'] is not None:
-                        fig_num = make_cat_plot(st.session_state['df_prepared'],
+                        fig_num = fn.make_cat_plot(st.session_state['df_prepared'],
                                                 plot_type_cat,
                                                 x_cat_plot,
                                                 y_cat_plot,

@@ -1,11 +1,11 @@
+from datetime import datetime as dt
 import matplotlib.pyplot as plt
 import streamlit as st
 import seaborn as sns
 import pandas as pd
 import numpy as np
 import matplotlib
-# import os
-# import io
+import io
 
 def read_table(path):
     try:
@@ -320,3 +320,93 @@ def make_num_plot(df, plot_type, x, y, target, to_plot_z_scores, z_scores_to_plo
         ax.legend(handles=all_handles, labels=all_labels)
 
     return fig
+
+def make_cat_plot(df, plot_type, x, y, aggregation, target, x_label, y_label, title, colormap='tab10'):
+
+    fig, ax = plt.subplots()
+
+    if plot_type == 'bar plot':
+        if y is None:
+            sns.countplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
+        else:
+            sns.barplot(df, x=x, y=y, hue=target, palette=colormap, ax=ax)
+    elif plot_type == 'pie plot':
+        if target is None:
+            if y is None:
+                df[x].value_counts().plot.pie(autopct='%1.1f%%')
+                ax.set_ylabel(f'Number of {x}')
+            else:
+                getattr(df.groupby([x]), aggregation)().plot(kind='pie', y=y, autopct='%1.1f%%', ax=ax)
+                ax.set_ylabel(f'{aggregation.capitalize()} of {y}')
+        else:
+            target_values = df[target].unique()
+            num_targets = len(target_values)
+
+            cols = 2 if num_targets < 5 else 3
+            rows = (num_targets + cols - 1) // cols
+
+            fig, axes = plt.subplots(rows, cols, figsize=(10, 5 * rows))
+            axes = axes.flatten()
+
+            if y is None:
+                fig.suptitle(f'Number of {x}')
+            else:
+                fig.suptitle(f'{aggregation.capitalize()} of {y} by {x}')
+
+            for i, val in enumerate(target_values):
+                if y is None:
+                    subset = df[x].value_counts()
+                    axes[i].pie(subset, labels=subset.index, autopct='%1.1f%%')
+                else:
+                    subset = getattr(df.groupby([x]), aggregation)()
+                    try:
+                        axes[i].pie(subset[y], labels=[round(x_i, 2) for x_i in subset.index], autopct='%1.1f%%')
+                    except:
+                        axes[i].pie(subset[y], labels=subset.index, autopct='%1.1f%%')
+
+                try:
+                    axes[i].set_title(f'{target} = {val:.2f}')
+                except:
+                    axes[i].set_title(f'{target} = {val}')
+
+                axes[i].axis('equal')
+
+            for j in range(num_targets, rows * cols):
+                fig.delaxes(axes[j])
+    if x_label != '':
+        ax.set_xlabel(x_label)
+    if y_label != '':
+        ax.set_ylabel(y_label)
+    if title != '':
+        ax.set_title(title)
+
+    return fig
+
+def save_to_xlsx(dfs, file_subname, page_names):
+    timestamp  = dt.now().strftime("%Y-%m-%d %H-%M-%S")
+    excel_buffer = io.BytesIO()
+    file_name = f'{timestamp} {file_subname}.xlsx'
+
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer: 
+        for df, page_name in zip(dfs, page_names):
+            df.to_excel(writer, sheet_name=page_name, columns=df.columns)
+    
+    return excel_buffer, file_name
+
+def save_data_function(df, df_info_num, df_info_cat, data_to_save, num_cols, cat_cols, save_format='xlsx'):
+    if data_to_save == 'Processed table':
+        return save_to_xlsx([df], 'Processed table', ['Processed table'])
+
+    elif data_to_save == 'Columns info':
+        page_names = []
+        dfs = []
+
+        if len(num_cols) > 0:
+            page_names.append('Numerical columns info')
+            dfs.append(df_info_num)
+
+        if len(cat_cols) > 0:
+            page_names.append('Cathegorical columns info')
+            dfs.append(df_info_cat)
+        
+        return save_to_xlsx(dfs, 'Columns info', page_names)
