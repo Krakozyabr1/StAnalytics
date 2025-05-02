@@ -66,8 +66,6 @@ def get_df_info(df):
     df_describe = df.describe().transpose()
     df_info = get_df_info_num(df)
     df_info_num = df_info.join(df_describe, how='inner')
-    # df_info_num = df_info_num[df_info_num['Dtype'] != 'object']
-    print(df_info_num.index)
     num_cols = [idx for idx in df.columns if idx in df_info_num.index]
     cat_cols = [idx for idx in df.columns if idx not in df_info_num.index]
     for column in df.columns:
@@ -301,8 +299,7 @@ def make_num_plot(df, plot_type, x, y, target, to_plot_z_scores, z_scores_to_plo
 
     if target is not None:
             if not to_plot_regression and y != target:
-                seaborn_handles = ax.get_children()[-2].legend_handles
-                seaborn_labels = list(df[target].unique())
+                seaborn_handles, seaborn_labels = ax.get_legend_handles_labels()
 
     if to_plot_mean:
         line_handle, line_label = _plot_mean_median(ax, df, x, y, plot_type, target, colors, 'Mean')
