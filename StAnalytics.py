@@ -1,5 +1,18 @@
-import streamlit as st
 import functions as fn
+import streamlit as st
+import pandas as pd
+import numpy as np
+
+def clean_columns(df):
+    replecables = ['—', '-', '_', 'NA', '<NA>']
+    for replecable in replecables:
+        df.replace(replecable, np.nan, inplace=True)
+    for column in df.columns:
+        df[column] = df[column].astype(str).str.replace(r'\[.*?\]', '', regex=True).str.strip()
+        df[column] = df[column].replace('<NA>', pd.NA)
+        df[column] = df[column].replace('nan', pd.NA)
+        df[column] = pd.to_numeric(df[column], errors='ignore')
+    return df
 
 @st.cache_resource
 def save_data_function(df, df_info_num, df_info_cat, data_to_save, num_cols, cat_cols, save_format='xlsx'):        
@@ -7,8 +20,8 @@ def save_data_function(df, df_info_num, df_info_cat, data_to_save, num_cols, cat
     
 
 @st.cache_resource
-def read_table(path):
-    return fn.read_table(path)
+def read_table(path, table_to_read):
+    return fn.read_table(path, table_to_read)
 
 
 @st.cache_resource
@@ -51,6 +64,13 @@ with left:
             file_path = st.text_input("Provide file path or URL:", value="").replace('"', "")
         elif file_selection_method == "Uploaded file":
             file_path = st.file_uploader("Upload a file", type=["csv", "xlsx", "txt"])
+        table_to_read_input = st.text_input('Table index or name (if there is multiple)', value='1')
+
+        try:
+            table_to_read = int(table_to_read_input) - 1
+        except:
+            table_to_read = table_to_read_input
+
         select_file_b = st.form_submit_button("Confirm", type="primary")
     
     if select_file_b:
@@ -59,9 +79,10 @@ with left:
 
 if file_path != "" and file_path is not None:
     with right:
-        df = read_table(file_path)
+        df = read_table(file_path, table_to_read)
+        df_cleared = clean_columns(df)
 
-        df_info_num, df_info_cat, num_cols, cat_cols, target_cols = get_df_info(df) 
+        df_info_num, df_info_cat, num_cols, cat_cols, target_cols = get_df_info(df_cleared) 
         if len(num_cols) > 0:
             st.text('Numerical columns info')
             st.dataframe(df_info_num)
@@ -102,7 +123,7 @@ if file_path != "" and file_path is not None:
                         z_threshold = 3
                 
                 with st.container(border=False):
-                    dup_count = df.duplicated().sum()
+                    dup_count = df_cleared.duplicated().sum()
                     if dup_count == 0:
                         st.text('Duplicate rows handling (no duplicates found)')
                     elif dup_count == 1:
@@ -116,10 +137,10 @@ if file_path != "" and file_path is not None:
                 prepare_data_button = st.button('Prepare data', type="primary")
 
             if 'df_prepared' not in st.session_state or st.session_state['df_prepared'] is None:
-                st.session_state['df_prepared'] = df
+                st.session_state['df_prepared'] = df_cleared
 
             if prepare_data_button:
-                df_prepared = handle_duplicates(df, duplicate_handling)
+                df_prepared = handle_duplicates(df_cleared, duplicate_handling)
                 df_prepared = handle_missing(df_prepared, missing_handling, num_cols, cat_cols)
                 df_prepared = handle_outliers(df_prepared, outlier_detection, outlier_handling, num_cols, z_threshold)
                 st.session_state['df_prepared'] = df_prepared

@@ -7,15 +7,18 @@ import numpy as np
 import matplotlib
 import io
 
-def read_table(path):
+def read_table(path, table_to_read=0):
     try:
         return pd.read_table(path, sep=None, engine='python')
     except Exception as e:
         try:
-            return pd.read_excel(path)
+            return pd.read_excel(path, sheet_name=table_to_read)
         except Exception as e_excel:
-            st.error(f"Error reading file: {path}\n{e}\nExcel Error: {e_excel}")
-            return None
+            try:
+                return pd.read_html(path)[table_to_read]
+            except Exception as e_html:
+                st.error(f"Error reading file: {path}\n{e}\nExcel Error: {e_excel}\nHTML Error: {e_html}")
+                return None
 
 def get_df_info_num(df):
     try:
@@ -27,8 +30,9 @@ def get_df_info_num(df):
                             'Null num': pd.isna(df[col]).sum(),
                             # 'Unique Count': df[col].nunique(),
                             })
-        
-        return pd.DataFrame({k: [dic[k] for dic in df_info] for k in df_info[0]}, index=columns)   
+        df_info_df = pd.DataFrame({k: [dic[k] for dic in df_info] for k in df_info[0]}, index=columns)  
+        df_info_num_filtered = df_info_df[df_info_df['Dtype'] != 'object']
+        return  df_info_num_filtered
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
@@ -62,8 +66,10 @@ def get_df_info(df):
     df_describe = df.describe().transpose()
     df_info = get_df_info_num(df)
     df_info_num = df_info.join(df_describe, how='inner')
-    num_cols = [idx for idx in df_info.index if idx in df_info_num.index]
-    cat_cols = [idx for idx in df_info.index if idx not in df_info_num.index]
+    # df_info_num = df_info_num[df_info_num['Dtype'] != 'object']
+    print(df_info_num.index)
+    num_cols = [idx for idx in df.columns if idx in df_info_num.index]
+    cat_cols = [idx for idx in df.columns if idx not in df_info_num.index]
     for column in df.columns:
         if df[column].nunique() < 6:
             if column not in cat_cols:
